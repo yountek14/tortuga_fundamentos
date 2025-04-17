@@ -1,169 +1,76 @@
 import turtle
+import random
+import time
 
-# Configuración inicial
-screen = turtle.Screen()
-screen.bgcolor("white")
-screen.title("Pikachu by @AI")
-p = turtle.Turtle()
-p.speed(10)
-p.pensize(3)
+# CONFIGURACIÓN DEL MUNDO
+GRID_SIZE = 20  # Tamaño de la grilla (20x20)
+CELL_SIZE = 20  # Tamaño en píxeles de cada celda
+DELAY = 0.2     # Delay entre generaciones
 
-# Función para dibujar formas elípticas (para cuerpo y cabeza)
-def oval(t, size_x, size_y, color):
-    t.color(color)
-    t.begin_fill()
-    for _ in range(2):
-        t.circle(size_x, 90)
-        t.circle(size_y, 90)
-    t.end_fill()
+# Creamos ventana
+pantalla = turtle.Screen()
+pantalla.title("Juego de la Vida - Conway")
+pantalla.bgcolor("white")
+pantalla.setup(width=GRID_SIZE * CELL_SIZE + 50, height=GRID_SIZE * CELL_SIZE + 50)
+pantalla.tracer(0)
 
-# Función para dibujar orejas
-def ear(t, length, angle, color):
-    t.setheading(angle)
-    t.color(color)
-    t.begin_fill()
-    t.forward(length)
-    t.right(120)
-    t.forward(length * 0.6)
-    t.right(120)
-    t.forward(length)
-    t.end_fill()
+# Lápiz para dibujar
+lapiz = turtle.Turtle()
+lapiz.penup()
+lapiz.hideturtle()
+lapiz.speed(0)
 
-# Cabeza principal
-p.penup()
-p.goto(0, -100)
-p.pendown()
-oval(p, 60, 100, "#FFD700")  # Amarillo Pikachu
+# Inicializar matriz con ceros y algunos vivos aleatorios
+def crear_matriz():
+    return [[random.choice([0, 1]) for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]
 
-# Orejas
-p.penup()
-p.goto(-40, 120)
-p.pendown()
-ear(p, 80, 60, "black")  # Parte negra de oreja izquierda
-p.color("#FFD700")
-p.begin_fill()
-ear(p, 70, 60, "#FFD700")  # Parte amarilla
-p.end_fill()
+def contar_vecinos(matriz, x, y):
+    vecinos = 0
+    for dx in [-1, 0, 1]:
+        for dy in [-1, 0, 1]:
+            if dx == 0 and dy == 0:
+                continue
+            nx, ny = x + dx, y + dy
+            if 0 <= nx < GRID_SIZE and 0 <= ny < GRID_SIZE:
+                vecinos += matriz[nx][ny]
+    return vecinos
 
-p.penup()
-p.goto(40, 120)
-p.pendown()
-ear(p, 80, 120, "black")  # Oreja derecha
-p.color("#FFD700")
-p.begin_fill()
-ear(p, 70, 120, "#FFD700")
-p.end_fill()
+def actualizar(matriz):
+    nueva = [[0]*GRID_SIZE for _ in range(GRID_SIZE)]
+    for x in range(GRID_SIZE):
+        for y in range(GRID_SIZE):
+            vivos = contar_vecinos(matriz, x, y)
+            if matriz[x][y] == 1 and vivos in [2, 3]:
+                nueva[x][y] = 1
+            elif matriz[x][y] == 0 and vivos == 3:
+                nueva[x][y] = 1
+    return nueva
 
-# Ojos
-def eye(x, y):
-    p.penup()
-    p.goto(x, y)
-    p.pendown()
-    p.color("black")
-    p.begin_fill()
-    p.circle(15)
-    p.end_fill()
-    
-    # Brillo ocular
-    p.penup()
-    p.goto(x + 5, y + 20)
-    p.color("white")
-    p.begin_fill()
-    p.circle(4)
-    p.end_fill()
+def dibujar_matriz(matriz):
+    lapiz.clear()
+    for x in range(GRID_SIZE):
+        for y in range(GRID_SIZE):
+            if matriz[x][y] == 1:
+                dibujar_celda(x, y, "black")
+            else:
+                dibujar_celda(x, y, "white")
+    pantalla.update()
 
-eye(-25, 40)
-eye(25, 40)
-
-# Mejillas rojas
-p.penup()
-p.goto(-50, 0)
-p.color("#FF0000")
-p.begin_fill()
-p.circle(10)
-p.end_fill()
-
-p.goto(50, 0)
-p.begin_fill()
-p.circle(10)
-p.end_fill()
-
-# Boca sonriente
-p.penup()
-p.goto(-25, -20)
-p.pendown()
-p.right(90)
-p.color("black")
-p.width(4)
-p.circle(25, 180)
-
-# Cuerpo
-p.penup()
-p.goto(0, -160)
-p.pendown()
-oval(p, 80, 120, "#FFD700")
-
-# Brazos
-def arm(x, angle):
-    p.penup()
-    p.goto(x, -120)
-    p.setheading(angle)
-    p.pendown()
-    p.color("#FFD700")
-    p.begin_fill()
-    p.forward(40)
-    p.left(90)
-    p.forward(20)
-    p.left(90)
-    p.forward(40)
-    p.end_fill()
-
-arm(-70, 150)
-arm(70, 30)
-
-# Piernas
-p.penup()
-p.goto(-40, -240)
-p.color("#FFD700")
-p.begin_fill()
-p.circle(20)
-p.end_fill()
-
-p.goto(40, -240)
-p.begin_fill()
-p.circle(20)
-p.end_fill()
-
-# Cola (forma de rayo)
-def draw_tail():
-    p.penup()
-    p.goto(120, -180)
-    p.pendown()
-    p.color("#8B4513")  # Café para base
-    p.begin_fill()
-    p.setheading(45)
-    p.forward(40)
-    p.right(90)
-    p.forward(20)
-    p.right(90)
-    p.forward(40)
-    p.end_fill()
-    
-    # Parte eléctrica
-    p.color("black")
-    p.penup()
-    p.goto(160, -140)
-    p.pendown()
-    p.begin_fill()
-    p.setheading(60)
+def dibujar_celda(x, y, color):
+    lapiz.goto(
+        x * CELL_SIZE - (GRID_SIZE * CELL_SIZE) // 2,
+        y * CELL_SIZE - (GRID_SIZE * CELL_SIZE) // 2
+    )
+    lapiz.fillcolor(color)
+    lapiz.begin_fill()
     for _ in range(4):
-        p.forward(30)
-        p.right(90)
-        p.forward(30)
-        p.left(90)
-    p.end_fill()
+        lapiz.forward(CELL_SIZE)
+        lapiz.right(90)
+    lapiz.end_fill()
 
-draw_tail()
-
-p.hideturtle()
-turtle.done()
+# INICIAR SIMULACIÓN
+matriz = crear_matriz()
+while True:
+    dibujar_matriz(matriz)
+    matriz = actualizar(matriz)
+    time.sleep(DELAY)
